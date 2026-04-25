@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>aura.iq — something's coming</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300;1,600&family=Space+Mono:wght@400;700&family=DM+Sans:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+[data-theme="dark"] {
+  --bg: #0a0a0a; --bg2: #0d0d0d; --bg3: #111;
+  --border: rgba(124,111,255,0.15); --border2: rgba(124,111,255,0.28);
+  --text: #f0ece4; --text-dim: rgba(240,236,228,0.4); --text-faint: rgba(240,236,228,0.13);
+  --purple: #7c6fff; --purple-hi: #9b8fff; --purple-glow: rgba(124,111,255,0.1);
+  --game1: #050508; --game2: #080610;
+  --icon-bg: #12082e; --logo-text: #f0ece4;
+}
+[data-theme="light"] {
+  --bg: #f0ece4; --bg2: #e8e3da; --bg3: #ede8df;
+  --border: rgba(83,64,232,0.13); --border2: rgba(83,64,232,0.28);
+  --text: #0e0e0e; --text-dim: rgba(14,14,14,0.45); --text-faint: rgba(14,14,14,0.14);
+  --purple: #5340e8; --purple-hi: #7c6fff; --purple-glow: rgba(83,64,232,0.07);
+  --game1: #ddd5f5; --game2: #c8bef0;
+  --icon-bg: #e0d8f8; --logo-text: #0e0e0e;
+}
+
+html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; transition: background 0.4s, color 0.3s; }
+
+#stars { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+[data-theme="light"] #stars { opacity: 0.25; }
+
+/* TOGGLE */
+.theme-toggle { position:fixed; top:1.25rem; right:1.25rem; z-index:50; display:flex; align-items:center; gap:8px; }
+.tog-icon { font-size:13px; line-height:1; transition:opacity 0.3s; }
+.tog-track { width:46px; height:24px; border-radius:50px; background:var(--bg3); border:1px solid var(--border2); position:relative; cursor:pointer; transition:all 0.3s; }
+.tog-track:hover { border-color:var(--purple); }
+.tog-thumb { position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:var(--purple); transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1), background 0.3s; box-shadow:0 0 8px rgba(124,111,255,0.5); }
+[data-theme="light"] .tog-thumb { transform:translateX(22px); }
+.sun { opacity:0; } .moon { opacity:1; }
+[data-theme="light"] .sun { opacity:1; } [data-theme="light"] .moon { opacity:0; }
+
+/* LAYOUT */
+.page { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; min-height:100vh; padding:0 1.5rem 4rem; }
+
+header { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2.5rem 0 1.5rem; }
+.logo-icon { width:50px; height:50px; border-radius:50%; flex-shrink:0; }
+.logo-name { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:600; color:var(--logo-text); letter-spacing:0.04em; line-height:1; transition:color 0.3s; }
+.logo-sub { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.4em; color:var(--purple); margin-top:4px; transition:color 0.3s; }
+
+.hero { text-align:center; padding:2.5rem 0 1.5rem; max-width:580px; }
+.hero-eye { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.4em; color:var(--purple); text-transform:uppercase; margin-bottom:1.25rem; }
+.hero-title { font-family:'Cormorant Garamond',serif; font-size:clamp(38px,7vw,66px); font-weight:300; font-style:italic; color:var(--text); line-height:1.1; margin-bottom:1rem; transition:color 0.3s; }
+.hero-title span { color:var(--purple); font-style:normal; font-weight:600; }
+.hero-sub { font-size:14px; font-weight:300; color:var(--text-dim); line-height:1.7; transition:color 0.3s; }
+
+/* MAIN GRID */
+.main-row { width:100%; max-width:1080px; display:grid; grid-template-columns:1fr 320px; gap:1.25rem; align-items:start; margin:1.25rem 0; }
+@media(max-width:780px){ .main-row{ grid-template-columns:1fr; } }
+
+/* GAME */
+.game-label { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.28em; color:var(--purple); opacity:0.5; text-transform:uppercase; text-align:center; margin-bottom:0.65rem; }
+.game-wrap { background:var(--game1); border:0.5px solid var(--border2); border-radius:18px; overflow:hidden; position:relative; transition:background 0.4s, border-color 0.3s; }
+#gameCanvas { display:block; width:100%; height:auto; cursor:pointer; }
+
+.game-overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(6px); transition:opacity 0.35s; border-radius:18px; }
+[data-theme="dark"] .game-overlay { background:rgba(5,5,8,0.84); }
+[data-theme="light"] .game-overlay { background:rgba(220,212,245,0.84); }
+.game-overlay.hidden { opacity:0; pointer-events:none; }
+
+.ov-title { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:600; color:var(--text); margin-bottom:0.3rem; transition:color 0.3s; }
+.ov-sub { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.14em; color:var(--text-dim); margin-bottom:1.5rem; text-align:center; padding:0 2rem; line-height:1.9; transition:color 0.3s; }
+.play-btn { background:var(--purple); color:#fff; border:none; border-radius:50px; padding:0.8rem 2.2rem; font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.2em; cursor:pointer; transition:all 0.2s; }
+.play-btn:hover { background:var(--purple-hi); transform:scale(1.04); }
+
+.hud { position:absolute; top:14px; left:16px; right:16px; display:flex; justify-content:space-between; pointer-events:none; }
+.hud-item { font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.12em; color:var(--purple); opacity:0.65; }
+.hud-score { font-size:15px; color:var(--text); font-weight:700; opacity:1; }
+
+.ctrl-hint { font-family:'Space Mono',monospace; font-size:8px; letter-spacing:0.15em; color:var(--text-faint); text-align:center; margin-top:0.5rem; }
+
+/* LEADERBOARD */
+.lb-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.7rem; }
+.lb-title { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; color:var(--text); transition:color 0.3s; }
+.lb-live { display:flex; align-items:center; gap:5px; font-family:'Space Mono',monospace; font-size:8px; letter-spacing:0.2em; color:var(--text-dim); }
+.live-dot { width:5px; height:5px; border-radius:50%; background:var(--purple); animation:pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.6)} }
+
+.lb-table { background:var(--bg2); border:0.5px solid var(--border); border-radius:14px; overflow:hidden; transition:background 0.4s, border-color 0.3s; }
+.lb-loading { padding:2rem; text-align:center; font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.2em; color:var(--text-faint); }
+
+.lb-row { display:grid; grid-template-columns:34px 1fr auto; align-items:center; padding:0.65rem 0.9rem; border-bottom:0.5px solid var(--border); gap:0.6rem; transition:background 0.2s; }
+.lb-row:last-child { border-bottom:none; }
+.lb-row:hover { background:var(--purple-glow); }
+.lb-row.you { background:var(--purple-glow); border-left:2px solid var(--purple); }
+
+.lb-rank { font-family:'Space Mono',monospace; font-size:9px; color:var(--text-faint); text-align:center; transition:color 0.3s; }
+.lb-rank.gold { color:#d4a847; } .lb-rank.silver { color:#a8a8a8; } .lb-rank.bronze { color:#cd7f52; }
+.lb-name { font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); transition:color 0.3s; }
+.lb-you { font-family:'Space Mono',monospace; font-size:6px; letter-spacing:0.15em; color:var(--purple); background:var(--purple-glow); border-radius:20px; padding:1px 5px; margin-left:5px; vertical-align:middle; }
+.lb-sub { font-family:'Space Mono',monospace; font-size:7px; letter-spacing:0.08em; color:var(--text-faint); }
+.lb-score { font-family:'Space Mono',monospace; font-size:12px; font-weight:700; color:var(--purple); text-align:right; transition:color 0.3s; }
+
+/* MODAL */
+.modal-overlay { position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.3s; }
+[data-theme="dark"] .modal-overlay { background:rgba(5,5,8,0.93); }
+[data-theme="light"] .modal-overlay { background:rgba(220,212,245,0.9); }
+.modal-overlay.show { opacity:1; pointer-events:all; }
+.modal { background:var(--bg3); border:0.5px solid var(--border2); border-radius:18px; padding:2.25rem; text-align:center; max-width:340px; width:90%; transition:background 0.4s; }
+.modal-title { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:600; color:var(--text); margin-bottom:0.25rem; }
+.modal-score { font-family:'Space Mono',monospace; font-size:34px; color:var(--purple); font-weight:700; margin:0.65rem 0; }
+.modal-sub { font-size:12px; color:var(--text-dim); margin-bottom:1.1rem; }
+.modal input { width:100%; background:var(--bg); border:0.5px solid var(--border2); border-radius:8px; padding:0.75rem; color:var(--text); font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.1em; text-align:center; outline:none; margin-bottom:0.65rem; transition:border-color 0.2s, background 0.4s; }
+.modal input:focus { border-color:var(--purple); }
+.modal-btn { width:100%; background:var(--purple); color:#fff; border:none; border-radius:8px; padding:0.75rem; font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.2em; cursor:pointer; transition:background 0.2s; }
+.modal-btn:hover { background:var(--purple-hi); }
+
+/* FIREBASE SETUP NOTICE */
+.fb-notice { width:100%; max-width:1080px; background:var(--purple-glow); border:0.5px solid var(--border2); border-radius:12px; padding:1rem 1.25rem; margin-bottom:1rem; font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.1em; color:var(--purple); line-height:1.8; display:none; }
+.fb-notice.show { display:block; }
+
+footer { margin-top:2rem; text-align:center; }
+.footer-tagline { font-family:'Cormorant Garamond',serif; font-size:14px; font-style:italic; color:var(--text-dim); }
+.footer-text { font-family:'Space Mono',monospace; font-size:7px; letter-spacing:0.3em; color:var(--text-faint); text-transform:uppercase; margin-top:0.4rem; }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<!-- ══ STEP 1: PASTE YOUR FIREBASE CONFIG HERE ══
+  1. Go to console.firebase.google.com
+  2. Create a project → add a web app
+  3. Go to Realtime Database → Create database → Start in test mode
+  4. Copy your config and replace the placeholder below
+  ════════════════════════════════════════════════ -->
+<script>
+const FIREBASE_CONFIG = {// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBKFSfYI3bgVVwo89UETC47Qvzn_e4WjVY",
+  authDomain: "auraiq-6a01b.firebaseapp.com",
+  projectId: "auraiq-6a01b",
+  storageBucket: "auraiq-6a01b.firebasestorage.app",
+  messagingSenderId: "533871265211",
+  appId: "1:533871265211:web:57de159bfadb906f2bf09e",
+  measurementId: "G-1EKVKNKPF1"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+};
+const FIREBASE_READY = FIREBASE_CONFIG.apiKey !== "PASTE_YOUR_API_KEY";
+</script>
+
+<div class="theme-toggle">
+  <span class="tog-icon sun">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d4a847" stroke-width="2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  </span>
+  <div class="tog-track" id="themeToggle"><div class="tog-thumb"></div></div>
+  <span class="tog-icon moon">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a89fff" stroke-width="2" stroke-linecap="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  </span>
+</div>
+
+<div class="page">
+
+  <header>
+    <svg class="logo-icon" viewBox="0 0 800 800" fill="none">
+      <circle cx="400" cy="400" r="400" fill="var(--icon-bg)"/>
+      <circle cx="400" cy="400" r="320" stroke="var(--purple)" stroke-width="3" stroke-dasharray="18 12" opacity="0.3"/>
+      <circle cx="400" cy="400" r="260" stroke="var(--purple)" stroke-width="4" opacity="0.5"/>
+      <circle cx="400" cy="400" r="150" fill="var(--icon-bg)" opacity="0.8"/>
+      <circle cx="400" cy="400" r="70" fill="var(--purple)" opacity="0.35"/>
+      <circle cx="400" cy="400" r="28" fill="#c4b8ff" opacity="0.9"/>
+      <circle cx="400" cy="400" r="10" fill="#f0ece4"/>
+      <circle cx="400" cy="80" r="26" fill="var(--purple)"/>
+      <circle cx="400" cy="80" r="50" fill="var(--purple)" opacity="0.15"/>
+      <circle cx="720" cy="400" r="14" fill="#a89fff" opacity="0.4"/>
+    </svg>
+    <div>
+      <div class="logo-name">aura</div>
+      <div class="logo-sub">· i q ·</div>
+    </div>
+  </header>
+
+  <div class="hero">
+    <p class="hero-eye">· something's coming ·</p>
+    <h1 class="hero-title">for the ones who<br><span>study different</span></h1>
+    <p class="hero-sub">AP · SAT · IB · guides · memes · community<br>while you wait — prove your intelligence below</p>
+  </div>
+
+  <div class="fb-notice" id="fbNotice">
+    ⚠ firebase not connected · leaderboard is local only · see code comments to connect
+  </div>
+
+  <div class="main-row">
+
+    <div>
+      <p class="game-label">· integral runner · dodge the equations ·</p>
+      <div class="game-wrap">
+        <canvas id="gameCanvas" width="700" height="310"></canvas>
+        <div class="hud">
+          <div class="hud-item">aura.iq</div>
+          <div class="hud-item hud-score" id="hudScore">0</div>
+          <div class="hud-item">HI <span id="hiScore">0</span></div>
+        </div>
+        <div class="game-overlay" id="gameOverlay">
+          <div class="ov-title" id="ovTitle">integral runner</div>
+          <div class="ov-sub" id="ovSub">dodge the equations · collect the stars<br>space / tap to jump · double jump allowed</div>
+          <button class="play-btn" id="playBtn">▶ start running</button>
+        </div>
+      </div>
+      <p class="ctrl-hint">space · tap · click to jump</p>
+    </div>
+
+    <div>
+      <div class="lb-header">
+        <span class="lb-title">scholar board</span>
+        <span class="lb-live"><span class="live-dot"></span>live</span>
+      </div>
+      <div class="lb-table" id="leaderboard">
+        <div class="lb-loading">loading scholars...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <p class="footer-tagline">the ones who know, know.</p>
+    <p class="footer-text">aura.iq · coming soon · AP · SAT · IB</p>
+  </footer>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">new high score</div>
+    <div class="modal-score" id="modalScore">0</div>
+    <div class="modal-sub">enter your name for the leaderboard</div>
+    <input type="text" id="nameInput" placeholder="your name" maxlength="18"/>
+    <button class="modal-btn" id="submitScore">claim your rank →</button>
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<script>
+// ── THEME ──
+const html = document.documentElement;
+let isDark = true;
+document.getElementById('themeToggle').addEventListener('click', () => {
+  isDark = !isDark;
+  html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  if (gameState !== 'running') drawIdle();
+});
+
+// ── STARFIELD ──
+const sc = document.getElementById('stars'), sx = sc.getContext('2d');
+let SL = [];
+function initStars() {
+  sc.width = window.innerWidth; sc.height = window.innerHeight; SL = [];
+  for (let i=0;i<200;i++) SL.push({ x:Math.random()*sc.width, y:Math.random()*sc.height, r:Math.random()*1.2+0.2, ph:Math.random()*Math.PI*2, sp:Math.random()*0.4+0.1 });
+}
+function animStars() {
+  sx.clearRect(0,0,sc.width,sc.height);
+  const t = Date.now()*0.001;
+  SL.forEach(s=>{ const o=(Math.sin(t*s.sp+s.ph)*0.3+0.5)*0.55; sx.beginPath(); sx.arc(s.x,s.y,s.r,0,Math.PI*2); sx.fillStyle=`rgba(196,184,255,${o})`; sx.fill(); });
+  requestAnimationFrame(animStars);
+}
+window.addEventListener('resize', initStars);
+initStars(); animStars();
+
+// ── AUDIO ──
+let audioCtx = null;
+function getAudio() { if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+
+function playTone(freq, type, duration, gainVal, decay) {
+  try {
+    const ac = getAudio();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type = type; o.frequency.setValueAtTime(freq, ac.currentTime);
+    g.gain.setValueAtTime(gainVal, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + decay);
+    o.start(ac.currentTime); o.stop(ac.currentTime + duration);
+  } catch(e) {}
+}
+
+function soundJump() {
+  // Quick ascending pop
+  playTone(220, 'sine', 0.12, 0.15, 0.12);
+  setTimeout(()=>playTone(330, 'sine', 0.1, 0.1, 0.1), 30);
+}
+
+function soundCollect() {
+  // Bright chime
+  playTone(880, 'sine', 0.15, 0.12, 0.15);
+  setTimeout(()=>playTone(1100, 'sine', 0.12, 0.1, 0.12), 40);
+  setTimeout(()=>playTone(1320, 'sine', 0.1, 0.08, 0.1), 80);
+}
+
+function soundDie() {
+  // Descending dramatic crunch
+  playTone(300, 'sawtooth', 0.08, 0.18, 0.08);
+  setTimeout(()=>playTone(200, 'sawtooth', 0.1, 0.15, 0.1), 60);
+  setTimeout(()=>playTone(120, 'sawtooth', 0.15, 0.12, 0.15), 130);
+  setTimeout(()=>playTone(80, 'sine', 0.2, 0.1, 0.25), 200);
+}
+
+// ── GAME ──
+const cv = document.getElementById('gameCanvas'), cx = cv.getContext('2d');
+const W = cv.width, H = cv.height, GY = H - 52;
+const SYMS = ['∫','Σ','Δ','λ','∂','π','√','∞','θ','∇','α','β'];
+const PUR = ['#7c6fff','#a89fff','#c4b8ff','#9b8fff'];
+
+let gameState = 'idle', score = 0, hiScore = parseInt(localStorage.getItem('aiq_hi')||'0');
+let speed, frame, animId;
+let player, obstacles, collectibles, particles, nextObs, nextCol;
+let gStars = [];
+
+function initGStars() {
+  gStars = [];
+  for(let i=0;i<75;i++) gStars.push({x:Math.random()*W,y:Math.random()*GY,r:Math.random()*1.2+0.2,o:Math.random()*0.35+0.1});
+}
+initGStars();
+
+function resetGame() {
+  score=0; speed=4.5; frame=0;
+  player={x:110,y:GY,vy:0,jumps:0,w:26,h:26};
+  obstacles=[]; collectibles=[]; particles=[];
+  nextObs=90; nextCol=55;
+}
+
+function jump() {
+  if(player.jumps<2){ player.vy=-14.5; player.jumps++; burst(player.x+player.w/2,player.y+player.h,'#7c6fff',7); soundJump(); }
+}
+
+function burst(x,y,color,n) {
+  for(let i=0;i<n;i++) particles.push({x,y,vx:(Math.random()-0.5)*3.5,vy:Math.random()*-2.5-0.5,life:1,color,r:Math.random()*3+1});
+}
+
+function drawBg() {
+  cx.clearRect(0,0,W,H);
+  const g=cx.createLinearGradient(0,0,0,H);
+  if(isDark){g.addColorStop(0,'#050508');g.addColorStop(1,'#080610');}
+  else{g.addColorStop(0,'#ddd5f5');g.addColorStop(1,'#c8bef0');}
+  cx.fillStyle=g; cx.fillRect(0,0,W,H);
+  gStars.forEach(s=>{
+    cx.beginPath(); cx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    cx.fillStyle=isDark?`rgba(196,184,255,${s.o})`:`rgba(83,64,232,${s.o*0.35})`; cx.fill();
+    s.x-=speed*0.07; if(s.x<0){s.x=W;s.y=Math.random()*GY;}
+  });
+}
+
+function drawGround() {
+  cx.strokeStyle=isDark?'rgba(124,111,255,0.22)':'rgba(83,64,232,0.18)';
+  cx.lineWidth=1; cx.beginPath(); cx.moveTo(0,GY+player.h+2); cx.lineTo(W,GY+player.h+2); cx.stroke();
+}
+
+function drawPlayer() {
+  const px=player.x+player.w/2, py=player.y+player.h/2;
+  const pur=isDark?'#7c6fff':'#5340e8', lit=isDark?'#c4b8ff':'#3d28c4';
+  const gr=cx.createRadialGradient(px,py,2,px,py,25);
+  gr.addColorStop(0,isDark?'rgba(124,111,255,0.45)':'rgba(83,64,232,0.35)');
+  gr.addColorStop(1,'rgba(0,0,0,0)');
+  cx.beginPath(); cx.arc(px,py,25,0,Math.PI*2); cx.fillStyle=gr; cx.fill();
+  cx.beginPath(); cx.arc(px,py,15,0,Math.PI*2); cx.strokeStyle=isDark?'rgba(168,159,255,0.3)':'rgba(83,64,232,0.25)'; cx.lineWidth=1; cx.stroke();
+  cx.beginPath(); cx.arc(px,py,10,0,Math.PI*2); cx.fillStyle=pur; cx.fill();
+  cx.beginPath(); cx.arc(px,py,4.5,0,Math.PI*2); cx.fillStyle=lit; cx.fill();
+  const angle=frame*0.09, ox=px+Math.cos(angle)*15, oy=py+Math.sin(angle)*5;
+  cx.beginPath(); cx.arc(ox,oy,3,0,Math.PI*2); cx.fillStyle=isDark?'#f0ece4':'#0e0e0e'; cx.fill();
+}
+
+function drawObs() {
+  obstacles.forEach(o=>{
+    cx.font=`bold ${o.size}px 'Space Mono',monospace`; cx.textAlign='center'; cx.textBaseline='middle';
+    cx.shadowColor=o.color; cx.shadowBlur=14; cx.fillStyle=o.color;
+    cx.fillText(o.sym,o.x,o.y); cx.shadowBlur=0;
+  });
+}
+
+function drawCollect() {
+  collectibles.forEach(c=>{
+    const p=Math.sin(frame*0.12+c.ph)*0.3+0.7;
+    const g=cx.createRadialGradient(c.x,c.y,0,c.x,c.y,17);
+    g.addColorStop(0,'rgba(212,168,71,0.3)'); g.addColorStop(1,'rgba(212,168,71,0)');
+    cx.beginPath(); cx.arc(c.x,c.y,17,0,Math.PI*2); cx.fillStyle=g; cx.fill();
+    cx.beginPath(); cx.arc(c.x,c.y,6*p,0,Math.PI*2); cx.fillStyle=`rgba(212,168,71,${p})`; cx.fill();
+    cx.beginPath(); cx.arc(c.x,c.y,3,0,Math.PI*2); cx.fillStyle='#f0ece4'; cx.fill();
+  });
+}
+
+function drawPart() {
+  particles.forEach(p=>{ cx.globalAlpha=p.life; cx.beginPath(); cx.arc(p.x,p.y,p.r,0,Math.PI*2); cx.fillStyle=p.color; cx.fill(); });
+  cx.globalAlpha=1;
+}
+
+function update() {
+  frame++; score++;
+  speed=4.5+Math.floor(score/300)*0.35;
+  player.vy+=0.72; player.y+=player.vy;
+  if(player.y>=GY){player.y=GY;player.vy=0;player.jumps=0;}
+
+  nextObs--;
+  if(nextObs<=0){
+    const sz=22+Math.random()*18;
+    obstacles.push({x:W+20,y:GY+player.h/2-sz*0.1,sym:SYMS[Math.floor(Math.random()*SYMS.length)],size:sz,color:PUR[Math.floor(Math.random()*PUR.length)],w:sz*0.6,h:sz});
+    nextObs=Math.max(40,85+Math.random()*55-Math.floor(score/500)*5);
+  }
+
+  nextCol--;
+  if(nextCol<=0){
+    collectibles.push({x:W+10,y:GY-45-Math.random()*75,ph:Math.random()*Math.PI*2});
+    nextCol=55+Math.random()*40;
+  }
+
+  obstacles.forEach(o=>o.x-=speed);
+  obstacles=obstacles.filter(o=>o.x>-60);
+
+  collectibles=collectibles.filter(c=>{
+    c.x-=speed;
+    const dx=(player.x+player.w/2)-c.x, dy=(player.y+player.h/2)-c.y;
+    if(Math.sqrt(dx*dx+dy*dy)<22){ score+=50; burst(c.x,c.y,'#d4a847',8); soundCollect(); return false; }
+    return c.x>-20;
+  });
+
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.12;p.life-=0.04;});
+  particles=particles.filter(p=>p.life>0);
+
+  // Collision
+  const px=player.x+6,py=player.y+5,pw=player.w-10,ph=player.h-8;
+  for(let o of obstacles){
+    const ox=o.x-o.w*0.38, oy=o.y-o.h*0.78;
+    if(px<ox+o.w*0.76&&px+pw>ox&&py<oy+o.h&&py+ph>oy){ burst(player.x+13,player.y+13,'#7c6fff',22); soundDie(); gameState='dead'; return; }
+  }
+}
+
+function updateHUD() {
+  document.getElementById('hudScore').textContent=score;
+  document.getElementById('hiScore').textContent=Math.max(hiScore,score);
+}
+
+function loop() {
+  drawBg(); drawGround();
+  if(gameState==='running') update();
+  drawCollect(); drawObs(); drawPlayer(); drawPart(); updateHUD();
+  if(gameState==='dead'){onDeath();return;}
+  animId=requestAnimationFrame(loop);
+}
+
+function onDeath() {
+  cancelAnimationFrame(animId);
+  if(score>hiScore){
+    hiScore=score; localStorage.setItem('aiq_hi',hiScore);
+    document.getElementById('modalScore').textContent=score;
+    document.getElementById('modal').classList.add('show');
+  } else {
+    document.getElementById('ovTitle').textContent='game over';
+    document.getElementById('ovSub').textContent=`score: ${score} · keep going`;
+    document.getElementById('playBtn').textContent='↺ try again';
+    document.getElementById('gameOverlay').classList.remove('hidden');
+    gameState='idle';
+  }
+}
+
+function startGame() {
+  resetGame(); gameState='running';
+  document.getElementById('gameOverlay').classList.add('hidden');
+  loop();
+}
+
+function drawIdle() { drawBg(); drawGround(); drawPlayer(); }
+
+// Controls
+document.getElementById('playBtn').addEventListener('click', startGame);
+document.addEventListener('keydown', e=>{ if(e.code==='Space'){e.preventDefault(); gameState==='running'?jump():startGame();} });
+cv.addEventListener('click', ()=>gameState==='running'?jump():startGame());
+cv.addEventListener('touchstart', e=>{e.preventDefault();gameState==='running'?jump():startGame();},{passive:false});
+
+// ── FIREBASE LEADERBOARD ──
+const SEED = [
+  {name:'eigenvalue_e',  score:4820, subject:'AP Calc BC'},
+  {name:'theoremprover', score:3990, subject:'IB Math AA'},
+  {name:'derivativekid', score:3540, subject:'AP Physics'},
+  {name:'scholarnova',   score:3210, subject:'AP Calc AB'},
+  {name:'infinitesimal', score:2880, subject:'SAT Math'},
+  {name:'riemannsum',    score:2650, subject:'IB Physics'},
+  {name:'vectorspace_',  score:2310, subject:'AP Stats'},
+  {name:'limitless.iq',  score:2050, subject:'AP Chem'},
+];
+
+let lbData = {}; // key = name_lower → {name, score, subject}
+let myName = null;
+
+function renderLB() {
+  const rows = Object.values(lbData).sort((a,b)=>b.score-a.score).slice(0,10);
+  const rc = ['gold','silver','bronze'];
+  document.getElementById('leaderboard').innerHTML = rows.length===0
+    ? '<div class="lb-loading">no scores yet · be first</div>'
+    : rows.map((e,i)=>`
+      <div class="lb-row ${e.name===myName?'you':''}">
+        <div class="lb-rank ${rc[i]||''}">${String(i+1).padStart(2,'0')}</div>
+        <div>
+          <span class="lb-name">${e.name}</span>${e.name===myName?'<span class="lb-you">you</span>':''}
+          <div class="lb-sub">${e.subject}</div>
+        </div>
+        <div class="lb-score">${Number(e.score).toLocaleString()}</div>
+      </div>`).join('');
+}
+
+function seedIfEmpty(db) {
+  const ref = db.ref('leaderboard');
+  ref.once('value', snap => {
+    if (!snap.exists()) {
+      SEED.forEach(e => {
+        const key = e.name.toLowerCase().replace(/[^a-z0-9_]/g,'_');
+        ref.child(key).set({ name: e.name, score: e.score, subject: e.subject });
+      });
+    }
+  });
+}
+
+let db = null;
+
+if (FIREBASE_READY) {
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.database();
+    seedIfEmpty(db);
+
+    // Real-time listener
+    db.ref('leaderboard').on('value', snap => {
+      lbData = {};
+      snap.forEach(child => { lbData[child.key] = child.val(); });
+      renderLB();
+    });
+  } catch(e) {
+    console.warn('Firebase error:', e);
+    document.getElementById('fbNotice').classList.add('show');
+    useFallback();
+  }
+} else {
+  document.getElementById('fbNotice').classList.add('show');
+  useFallback();
+}
+
+function useFallback() {
+  // Local-only mode with seed data
+  SEED.forEach(e => { lbData[e.name.toLowerCase()] = e; });
+  renderLB();
+}
+
+function submitToLB(name, score, subject) {
+  const key = name.toLowerCase().replace(/[^a-z0-9_]/g,'_');
+  const entry = { name, score, subject };
+
+  if (db) {
+    // Only update if this score is higher
+    db.ref(`leaderboard/${key}`).transaction(current => {
+      if (!current || score > current.score) return entry;
+      return; // abort if not higher
+    });
+  } else {
+    // Fallback local
+    if (!lbData[key] || score > lbData[key].score) {
+      lbData[key] = entry;
+      renderLB();
+    }
+  }
+}
+
+// Modal
+document.getElementById('submitScore').addEventListener('click', () => {
+  const name = document.getElementById('nameInput').value.trim() || 'anonymous';
+  myName = name;
+  submitToLB(name, hiScore, 'aura.iq');
+  document.getElementById('modal').classList.remove('show');
+  document.getElementById('ovTitle').textContent = 'on the board';
+  document.getElementById('ovSub').textContent = `score: ${hiScore} · you're a scholar`;
+  document.getElementById('playBtn').textContent = '↺ run again';
+  document.getElementById('gameOverlay').classList.remove('hidden');
+  gameState = 'idle';
+});
+
+document.getElementById('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('submitScore').click(); });
+
+// Init
+document.getElementById('hiScore').textContent = hiScore;
+drawIdle();
+</script>
+</body>
+</html>
