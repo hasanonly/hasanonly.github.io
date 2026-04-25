@@ -64,18 +64,62 @@ header { display:flex; align-items:center; justify-content:center; gap:1rem; pad
 #gameCanvas { display:block; width:100%; height:auto; cursor:pointer; }
 
 .game-overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(6px); transition:opacity 0.35s; border-radius:18px; }
-[data-theme="dark"] .game-overlay { background:rgba(5,5,8,0.84); }
-[data-theme="light"] .game-overlay { background:rgba(220,212,245,0.84); }
+[data-theme="dark"] .game-overlay { background:rgba(5,5,8,0.88); }
+[data-theme="light"] .game-overlay { background:rgba(220,212,245,0.88); }
 .game-overlay.hidden { opacity:0; pointer-events:none; }
 
 .ov-title { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:600; color:var(--text); margin-bottom:0.3rem; transition:color 0.3s; }
-.ov-sub { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.14em; color:var(--text-dim); margin-bottom:1.5rem; text-align:center; padding:0 2rem; line-height:1.9; transition:color 0.3s; }
+.ov-sub { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.14em; color:var(--text-dim); margin-bottom:0.75rem; text-align:center; padding:0 2rem; line-height:1.9; transition:color 0.3s; }
+
+/* Username display in overlay */
+.ov-player {
+  font-family:'Space Mono',monospace;
+  font-size:10px;
+  letter-spacing:0.2em;
+  color:var(--purple);
+  margin-bottom:1.25rem;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.ov-player-dot { width:6px; height:6px; border-radius:50%; background:var(--purple); }
+.ov-change-name {
+  font-size:8px;
+  color:var(--text-faint);
+  cursor:pointer;
+  text-decoration:underline;
+  letter-spacing:0.15em;
+  background:none;
+  border:none;
+  font-family:'Space Mono',monospace;
+  transition:color 0.2s;
+  padding:0;
+}
+.ov-change-name:hover { color:var(--purple); }
+
 .play-btn { background:var(--purple); color:#fff; border:none; border-radius:50px; padding:0.8rem 2.2rem; font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.2em; cursor:pointer; transition:all 0.2s; }
 .play-btn:hover { background:var(--purple-hi); transform:scale(1.04); }
+
+/* Score display after game over */
+.ov-score {
+  font-family:'Space Mono',monospace;
+  font-size:28px;
+  font-weight:700;
+  color:var(--purple);
+  margin-bottom:0.25rem;
+}
+.ov-score-label {
+  font-family:'Space Mono',monospace;
+  font-size:8px;
+  letter-spacing:0.3em;
+  color:var(--text-faint);
+  margin-bottom:1.25rem;
+}
 
 .hud { position:absolute; top:14px; left:16px; right:16px; display:flex; justify-content:space-between; pointer-events:none; }
 .hud-item { font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.12em; color:var(--purple); opacity:0.65; }
 .hud-score { font-size:15px; color:var(--text); font-weight:700; opacity:1; }
+.hud-name { max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
 .ctrl-hint { font-family:'Space Mono',monospace; font-size:8px; letter-spacing:0.15em; color:var(--text-faint); text-align:center; margin-top:0.5rem; }
 
@@ -101,22 +145,32 @@ header { display:flex; align-items:center; justify-content:center; gap:1rem; pad
 .lb-sub { font-family:'Space Mono',monospace; font-size:7px; letter-spacing:0.08em; color:var(--text-faint); }
 .lb-score { font-family:'Space Mono',monospace; font-size:12px; font-weight:700; color:var(--purple); text-align:right; transition:color 0.3s; }
 
-/* MODAL */
+/* USERNAME MODAL - shown before first play */
 .modal-overlay { position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.3s; }
-[data-theme="dark"] .modal-overlay { background:rgba(5,5,8,0.93); }
-[data-theme="light"] .modal-overlay { background:rgba(220,212,245,0.9); }
+[data-theme="dark"] .modal-overlay { background:rgba(5,5,8,0.95); }
+[data-theme="light"] .modal-overlay { background:rgba(220,212,245,0.95); }
 .modal-overlay.show { opacity:1; pointer-events:all; }
-.modal { background:var(--bg3); border:0.5px solid var(--border2); border-radius:18px; padding:2.25rem; text-align:center; max-width:340px; width:90%; transition:background 0.4s; }
-.modal-title { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:600; color:var(--text); margin-bottom:0.25rem; }
-.modal-score { font-family:'Space Mono',monospace; font-size:34px; color:var(--purple); font-weight:700; margin:0.65rem 0; }
-.modal-sub { font-size:12px; color:var(--text-dim); margin-bottom:1.1rem; }
-.modal input { width:100%; background:var(--bg); border:0.5px solid var(--border2); border-radius:8px; padding:0.75rem; color:var(--text); font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.1em; text-align:center; outline:none; margin-bottom:0.65rem; transition:border-color 0.2s, background 0.4s; }
+
+.modal { background:var(--bg3); border:0.5px solid var(--border2); border-radius:18px; padding:2.5rem; text-align:center; max-width:360px; width:90%; transition:background 0.4s; }
+.modal-icon { margin:0 auto 1.25rem; width:64px; height:64px; }
+.modal-title { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:600; color:var(--text); margin-bottom:0.4rem; }
+.modal-sub { font-size:13px; color:var(--text-dim); margin-bottom:1.5rem; line-height:1.6; }
+.modal-hi { font-family:'Space Mono',monospace; font-size:11px; color:var(--purple); margin-bottom:1.25rem; display:none; }
+.modal-hi.show { display:block; }
+
+.modal input {
+  width:100%; background:var(--bg); border:0.5px solid var(--border2); border-radius:8px;
+  padding:0.85rem; color:var(--text); font-family:'Space Mono',monospace; font-size:12px;
+  letter-spacing:0.15em; text-align:center; outline:none; margin-bottom:0.75rem;
+  transition:border-color 0.2s, background 0.4s;
+}
 .modal input:focus { border-color:var(--purple); }
-.modal-btn { width:100%; background:var(--purple); color:#fff; border:none; border-radius:8px; padding:0.75rem; font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.2em; cursor:pointer; transition:background 0.2s; }
+.modal input::placeholder { color:var(--text-faint); letter-spacing:0.1em; }
+
+.modal-btn { width:100%; background:var(--purple); color:#fff; border:none; border-radius:8px; padding:0.85rem; font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.2em; cursor:pointer; transition:background 0.2s; }
 .modal-btn:hover { background:var(--purple-hi); }
 
-/* FIREBASE SETUP NOTICE */
-.fb-notice { width:100%; max-width:1080px; background:var(--purple-glow); border:0.5px solid var(--border2); border-radius:12px; padding:1rem 1.25rem; margin-bottom:1rem; font-family:'Space Mono',monospace; font-size:9px; letter-spacing:0.1em; color:var(--purple); line-height:1.8; display:none; }
+.fb-notice { width:100%; max-width:1080px; background:var(--purple-glow); border:0.5px solid var(--border2); border-radius:12px; padding:0.75rem 1.25rem; margin-bottom:0.75rem; font-family:'Space Mono',monospace; font-size:8px; letter-spacing:0.1em; color:var(--purple); line-height:1.8; display:none; }
 .fb-notice.show { display:block; }
 
 footer { margin-top:2rem; text-align:center; }
@@ -126,14 +180,7 @@ footer { margin-top:2rem; text-align:center; }
 </head>
 <body>
 
-<canvas id="stars"></canvas>
-
-<!-- ══ STEP 1: PASTE YOUR FIREBASE CONFIG HERE ══
-  1. Go to console.firebase.google.com
-  2. Create a project → add a web app
-  3. Go to Realtime Database → Create database → Start in test mode
-  4. Copy your config and replace the placeholder below
-  ════════════════════════════════════════════════ -->
+<!-- ══ FIREBASE CONFIG — paste your values here ══ -->
 <script>
 const FIREBASE_CONFIG = {// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
@@ -155,21 +202,14 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+const analytics = getAnalytics(app);ECT_ID",
 };
 const FIREBASE_READY = FIREBASE_CONFIG.apiKey !== "PASTE_YOUR_API_KEY";
 </script>
 
+<canvas id="stars"></canvas>
+
+<!-- THEME TOGGLE -->
 <div class="theme-toggle">
   <span class="tog-icon sun">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d4a847" stroke-width="2" stroke-linecap="round">
@@ -188,7 +228,6 @@ const FIREBASE_READY = FIREBASE_CONFIG.apiKey !== "PASTE_YOUR_API_KEY";
 </div>
 
 <div class="page">
-
   <header>
     <svg class="logo-icon" viewBox="0 0 800 800" fill="none">
       <circle cx="400" cy="400" r="400" fill="var(--icon-bg)"/>
@@ -214,30 +253,40 @@ const FIREBASE_READY = FIREBASE_CONFIG.apiKey !== "PASTE_YOUR_API_KEY";
     <p class="hero-sub">AP · SAT · IB · guides · memes · community<br>while you wait — prove your intelligence below</p>
   </div>
 
-  <div class="fb-notice" id="fbNotice">
-    ⚠ firebase not connected · leaderboard is local only · see code comments to connect
-  </div>
+  <div class="fb-notice" id="fbNotice">⚠ firebase not connected · leaderboard is local only · add your config to go live</div>
 
   <div class="main-row">
 
+    <!-- GAME -->
     <div>
       <p class="game-label">· integral runner · dodge the equations ·</p>
       <div class="game-wrap">
         <canvas id="gameCanvas" width="700" height="310"></canvas>
+
         <div class="hud">
-          <div class="hud-item">aura.iq</div>
+          <div class="hud-item hud-name" id="hudName">aura.iq</div>
           <div class="hud-item hud-score" id="hudScore">0</div>
           <div class="hud-item">HI <span id="hiScore">0</span></div>
         </div>
+
+        <!-- GAME OVERLAY — shown on idle/game over -->
         <div class="game-overlay" id="gameOverlay">
           <div class="ov-title" id="ovTitle">integral runner</div>
+          <div class="ov-score" id="ovScore" style="display:none;"></div>
+          <div class="ov-score-label" id="ovScoreLabel" style="display:none;"></div>
           <div class="ov-sub" id="ovSub">dodge the equations · collect the stars<br>space / tap to jump · double jump allowed</div>
+          <div class="ov-player" id="ovPlayer" style="display:none;">
+            <div class="ov-player-dot"></div>
+            <span id="ovPlayerName"></span>
+            <button class="ov-change-name" id="changeNameBtn">change</button>
+          </div>
           <button class="play-btn" id="playBtn">▶ start running</button>
         </div>
       </div>
       <p class="ctrl-hint">space · tap · click to jump</p>
     </div>
 
+    <!-- LEADERBOARD -->
     <div>
       <div class="lb-header">
         <span class="lb-title">scholar board</span>
@@ -256,27 +305,37 @@ const FIREBASE_READY = FIREBASE_CONFIG.apiKey !== "PASTE_YOUR_API_KEY";
   </footer>
 </div>
 
-<div class="modal-overlay" id="modal">
+<!-- USERNAME MODAL — shown on first visit or when changing name -->
+<div class="modal-overlay" id="usernameModal">
   <div class="modal">
-    <div class="modal-title">new high score</div>
-    <div class="modal-score" id="modalScore">0</div>
-    <div class="modal-sub">enter your name for the leaderboard</div>
-    <input type="text" id="nameInput" placeholder="your name" maxlength="18"/>
-    <button class="modal-btn" id="submitScore">claim your rank →</button>
+    <svg class="modal-icon" viewBox="0 0 800 800" fill="none">
+      <circle cx="400" cy="400" r="400" fill="#12082e"/>
+      <circle cx="400" cy="400" r="320" stroke="#7c6fff" stroke-width="3" stroke-dasharray="18 12" opacity="0.3"/>
+      <circle cx="400" cy="400" r="260" stroke="#a89fff" stroke-width="4" opacity="0.5"/>
+      <circle cx="400" cy="400" r="150" fill="#1e1050" opacity="0.8"/>
+      <circle cx="400" cy="400" r="70" fill="#7c6fff" opacity="0.4"/>
+      <circle cx="400" cy="400" r="28" fill="#c4b8ff" opacity="0.9"/>
+      <circle cx="400" cy="400" r="10" fill="#f0ece4"/>
+      <circle cx="400" cy="80" r="26" fill="#7c6fff"/>
+    </svg>
+    <div class="modal-title" id="modalTitle">become a scholar</div>
+    <div class="modal-sub" id="modalSub">choose your scholar name.<br>your scores will be saved under it — globally.</div>
+    <div class="modal-hi" id="modalHi"></div>
+    <input type="text" id="usernameInput" placeholder="your scholar name" maxlength="18" autocomplete="off" spellcheck="false"/>
+    <button class="modal-btn" id="usernameSubmit">enter the arena →</button>
   </div>
 </div>
 
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
 <script>
 // ── THEME ──
-const html = document.documentElement;
+const htmlEl = document.documentElement;
 let isDark = true;
 document.getElementById('themeToggle').addEventListener('click', () => {
   isDark = !isDark;
-  html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  htmlEl.setAttribute('data-theme', isDark ? 'dark' : 'light');
   if (gameState !== 'running') drawIdle();
 });
 
@@ -299,47 +358,131 @@ initStars(); animStars();
 // ── AUDIO ──
 let audioCtx = null;
 function getAudio() { if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
-
 function playTone(freq, type, duration, gainVal, decay) {
   try {
-    const ac = getAudio();
-    const o = ac.createOscillator(), g = ac.createGain();
+    const ac=getAudio(), o=ac.createOscillator(), g=ac.createGain();
     o.connect(g); g.connect(ac.destination);
-    o.type = type; o.frequency.setValueAtTime(freq, ac.currentTime);
-    g.gain.setValueAtTime(gainVal, ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + decay);
-    o.start(ac.currentTime); o.stop(ac.currentTime + duration);
-  } catch(e) {}
+    o.type=type; o.frequency.setValueAtTime(freq,ac.currentTime);
+    g.gain.setValueAtTime(gainVal,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+decay);
+    o.start(ac.currentTime); o.stop(ac.currentTime+duration);
+  } catch(e){}
+}
+function soundJump() { playTone(220,'sine',0.12,0.15,0.12); setTimeout(()=>playTone(330,'sine',0.1,0.1,0.1),30); }
+function soundCollect() { playTone(880,'sine',0.15,0.12,0.15); setTimeout(()=>playTone(1100,'sine',0.12,0.1,0.12),40); setTimeout(()=>playTone(1320,'sine',0.1,0.08,0.1),80); }
+function soundDie() { playTone(300,'sawtooth',0.08,0.18,0.08); setTimeout(()=>playTone(200,'sawtooth',0.1,0.15,0.1),60); setTimeout(()=>playTone(120,'sawtooth',0.15,0.12,0.15),130); setTimeout(()=>playTone(80,'sine',0.2,0.1,0.25),200); }
+
+// ── PLAYER IDENTITY ──
+// Stored in localStorage: aiq_username, aiq_hi
+let myName = localStorage.getItem('aiq_username') || null;
+let hiScore = parseInt(localStorage.getItem('aiq_hi') || '0');
+
+function saveIdentity(name) {
+  myName = name;
+  localStorage.setItem('aiq_username', name);
 }
 
-function soundJump() {
-  // Quick ascending pop
-  playTone(220, 'sine', 0.12, 0.15, 0.12);
-  setTimeout(()=>playTone(330, 'sine', 0.1, 0.1, 0.1), 30);
+function saveHiScore(score) {
+  hiScore = score;
+  localStorage.setItem('aiq_hi', score);
 }
 
-function soundCollect() {
-  // Bright chime
-  playTone(880, 'sine', 0.15, 0.12, 0.15);
-  setTimeout(()=>playTone(1100, 'sine', 0.12, 0.1, 0.12), 40);
-  setTimeout(()=>playTone(1320, 'sine', 0.1, 0.08, 0.1), 80);
+// ── USERNAME MODAL ──
+const usernameModal = document.getElementById('usernameModal');
+const usernameInput = document.getElementById('usernameInput');
+
+function showUsernameModal(isChange = false) {
+  document.getElementById('modalTitle').textContent = isChange ? 'change your name' : 'become a scholar';
+  document.getElementById('modalSub').textContent = isChange
+    ? 'pick a new scholar name. your new scores will save under it.'
+    : 'choose your scholar name.\nyour scores will be saved under it — globally.';
+  document.getElementById('usernameSubmit').textContent = isChange ? 'update name →' : 'enter the arena →';
+
+  if (myName && !isChange) {
+    usernameInput.value = myName;
+  } else {
+    usernameInput.value = '';
+  }
+
+  // Show hi score if returning
+  const hiEl = document.getElementById('modalHi');
+  if (myName && hiScore > 0) {
+    hiEl.textContent = `welcome back · your best: ${hiScore.toLocaleString()}`;
+    hiEl.classList.add('show');
+  } else {
+    hiEl.classList.remove('show');
+  }
+
+  usernameModal.classList.add('show');
+  setTimeout(() => usernameInput.focus(), 300);
 }
 
-function soundDie() {
-  // Descending dramatic crunch
-  playTone(300, 'sawtooth', 0.08, 0.18, 0.08);
-  setTimeout(()=>playTone(200, 'sawtooth', 0.1, 0.15, 0.1), 60);
-  setTimeout(()=>playTone(120, 'sawtooth', 0.15, 0.12, 0.15), 130);
-  setTimeout(()=>playTone(80, 'sine', 0.2, 0.1, 0.25), 200);
+function closeUsernameModal() {
+  usernameModal.classList.remove('show');
 }
 
-// ── GAME ──
+document.getElementById('usernameSubmit').addEventListener('click', () => {
+  const name = usernameInput.value.trim();
+  if (!name) { usernameInput.focus(); return; }
+  saveIdentity(name);
+  closeUsernameModal();
+  updatePlayerUI();
+  showGameOverlay('idle');
+});
+
+usernameInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('usernameSubmit').click();
+});
+
+document.getElementById('changeNameBtn').addEventListener('click', () => {
+  if (gameState === 'running') return;
+  showUsernameModal(true);
+});
+
+// ── UI HELPERS ──
+function updatePlayerUI() {
+  if (myName) {
+    document.getElementById('hudName').textContent = myName;
+    document.getElementById('ovPlayerName').textContent = myName;
+    document.getElementById('ovPlayer').style.display = 'flex';
+    document.getElementById('hiScore').textContent = hiScore;
+  }
+}
+
+function showGameOverlay(state, lastScore) {
+  const ovTitle = document.getElementById('ovTitle');
+  const ovSub = document.getElementById('ovSub');
+  const ovScore = document.getElementById('ovScore');
+  const ovScoreLabel = document.getElementById('ovScoreLabel');
+  const playBtn = document.getElementById('playBtn');
+  const overlay = document.getElementById('gameOverlay');
+
+  if (state === 'idle') {
+    ovTitle.textContent = 'integral runner';
+    ovSub.textContent = 'dodge the equations · collect the stars\nspace / tap to jump · double jump allowed';
+    ovScore.style.display = 'none';
+    ovScoreLabel.style.display = 'none';
+    playBtn.textContent = '▶ start running';
+  } else if (state === 'dead') {
+    ovTitle.textContent = lastScore > 0 && lastScore === hiScore ? '✦ new best' : 'game over';
+    ovScore.textContent = lastScore.toLocaleString();
+    ovScore.style.display = 'block';
+    ovScoreLabel.textContent = lastScore === hiScore ? `personal best · saved to leaderboard` : `score · best: ${hiScore.toLocaleString()}`;
+    ovScoreLabel.style.display = 'block';
+    ovSub.textContent = '';
+    playBtn.textContent = '↺ run again';
+  }
+
+  overlay.classList.remove('hidden');
+}
+
+// ── GAME ENGINE ──
 const cv = document.getElementById('gameCanvas'), cx = cv.getContext('2d');
 const W = cv.width, H = cv.height, GY = H - 52;
 const SYMS = ['∫','Σ','Δ','λ','∂','π','√','∞','θ','∇','α','β'];
 const PUR = ['#7c6fff','#a89fff','#c4b8ff','#9b8fff'];
 
-let gameState = 'idle', score = 0, hiScore = parseInt(localStorage.getItem('aiq_hi')||'0');
+let gameState = 'idle', score = 0;
 let speed, frame, animId;
 let player, obstacles, collectibles, particles, nextObs, nextCol;
 let gStars = [];
@@ -421,6 +564,11 @@ function drawPart() {
   cx.globalAlpha=1;
 }
 
+function updateHUD() {
+  document.getElementById('hudScore').textContent = score;
+  document.getElementById('hiScore').textContent = Math.max(hiScore, score);
+}
+
 function update() {
   frame++; score++;
   speed=4.5+Math.floor(score/300)*0.35;
@@ -457,40 +605,43 @@ function update() {
   const px=player.x+6,py=player.y+5,pw=player.w-10,ph=player.h-8;
   for(let o of obstacles){
     const ox=o.x-o.w*0.38, oy=o.y-o.h*0.78;
-    if(px<ox+o.w*0.76&&px+pw>ox&&py<oy+o.h&&py+ph>oy){ burst(player.x+13,player.y+13,'#7c6fff',22); soundDie(); gameState='dead'; return; }
+    if(px<ox+o.w*0.76&&px+pw>ox&&py<oy+o.h&&py+ph>oy){
+      burst(player.x+13,player.y+13,'#7c6fff',22);
+      soundDie();
+      gameState='dead';
+      return;
+    }
   }
-}
-
-function updateHUD() {
-  document.getElementById('hudScore').textContent=score;
-  document.getElementById('hiScore').textContent=Math.max(hiScore,score);
 }
 
 function loop() {
   drawBg(); drawGround();
   if(gameState==='running') update();
   drawCollect(); drawObs(); drawPlayer(); drawPart(); updateHUD();
-  if(gameState==='dead'){onDeath();return;}
+  if(gameState==='dead'){ onDeath(); return; }
   animId=requestAnimationFrame(loop);
 }
 
 function onDeath() {
   cancelAnimationFrame(animId);
-  if(score>hiScore){
-    hiScore=score; localStorage.setItem('aiq_hi',hiScore);
-    document.getElementById('modalScore').textContent=score;
-    document.getElementById('modal').classList.add('show');
-  } else {
-    document.getElementById('ovTitle').textContent='game over';
-    document.getElementById('ovSub').textContent=`score: ${score} · keep going`;
-    document.getElementById('playBtn').textContent='↺ try again';
-    document.getElementById('gameOverlay').classList.remove('hidden');
-    gameState='idle';
+
+  // Always save if this score beats their personal best
+  if (score > hiScore) {
+    saveHiScore(score);
+    if (myName) submitToLB(myName, score);
   }
+
+  showGameOverlay('dead', score);
 }
 
 function startGame() {
-  resetGame(); gameState='running';
+  // If no username yet, show modal first
+  if (!myName) {
+    showUsernameModal(false);
+    return;
+  }
+  resetGame();
+  gameState = 'running';
   document.getElementById('gameOverlay').classList.add('hidden');
   loop();
 }
@@ -499,9 +650,19 @@ function drawIdle() { drawBg(); drawGround(); drawPlayer(); }
 
 // Controls
 document.getElementById('playBtn').addEventListener('click', startGame);
-document.addEventListener('keydown', e=>{ if(e.code==='Space'){e.preventDefault(); gameState==='running'?jump():startGame();} });
-cv.addEventListener('click', ()=>gameState==='running'?jump():startGame());
-cv.addEventListener('touchstart', e=>{e.preventDefault();gameState==='running'?jump():startGame();},{passive:false});
+document.addEventListener('keydown', e=>{
+  if(e.code==='Space'){
+    e.preventDefault();
+    if (usernameModal.classList.contains('show')) return;
+    gameState==='running' ? jump() : startGame();
+  }
+});
+cv.addEventListener('click', ()=>{ if(usernameModal.classList.contains('show')) return; gameState==='running'?jump():startGame(); });
+cv.addEventListener('touchstart', e=>{
+  e.preventDefault();
+  if(usernameModal.classList.contains('show')) return;
+  gameState==='running'?jump():startGame();
+},{passive:false});
 
 // ── FIREBASE LEADERBOARD ──
 const SEED = [
@@ -515,8 +676,10 @@ const SEED = [
   {name:'limitless.iq',  score:2050, subject:'AP Chem'},
 ];
 
-let lbData = {}; // key = name_lower → {name, score, subject}
-let myName = null;
+let lbData = {};
+let db = null;
+
+function toKey(name) { return name.toLowerCase().replace(/[^a-z0-9_]/g,'_'); }
 
 function renderLB() {
   const rows = Object.values(lbData).sort((a,b)=>b.score-a.score).slice(0,10);
@@ -528,25 +691,40 @@ function renderLB() {
         <div class="lb-rank ${rc[i]||''}">${String(i+1).padStart(2,'0')}</div>
         <div>
           <span class="lb-name">${e.name}</span>${e.name===myName?'<span class="lb-you">you</span>':''}
-          <div class="lb-sub">${e.subject}</div>
+          <div class="lb-sub">${e.subject||'aura.iq'}</div>
         </div>
         <div class="lb-score">${Number(e.score).toLocaleString()}</div>
       </div>`).join('');
 }
 
+function submitToLB(name, score) {
+  const key = toKey(name);
+  const entry = { name, score, subject: 'aura.iq' };
+
+  if (db) {
+    // Firebase transaction — only saves if score is higher
+    db.ref(`leaderboard/${key}`).transaction(current => {
+      if (!current || score > current.score) return entry;
+      return undefined; // abort — not higher
+    });
+  } else {
+    // Local fallback
+    if (!lbData[key] || score > lbData[key].score) {
+      lbData[key] = entry;
+      renderLB();
+    }
+  }
+}
+
 function seedIfEmpty(db) {
-  const ref = db.ref('leaderboard');
-  ref.once('value', snap => {
+  db.ref('leaderboard').once('value', snap => {
     if (!snap.exists()) {
       SEED.forEach(e => {
-        const key = e.name.toLowerCase().replace(/[^a-z0-9_]/g,'_');
-        ref.child(key).set({ name: e.name, score: e.score, subject: e.subject });
+        db.ref(`leaderboard/${toKey(e.name)}`).set(e);
       });
     }
   });
 }
-
-let db = null;
 
 if (FIREBASE_READY) {
   try {
@@ -554,7 +732,7 @@ if (FIREBASE_READY) {
     db = firebase.database();
     seedIfEmpty(db);
 
-    // Real-time listener
+    // Real-time global listener
     db.ref('leaderboard').on('value', snap => {
       lbData = {};
       snap.forEach(child => { lbData[child.key] = child.val(); });
@@ -563,56 +741,26 @@ if (FIREBASE_READY) {
   } catch(e) {
     console.warn('Firebase error:', e);
     document.getElementById('fbNotice').classList.add('show');
-    useFallback();
+    SEED.forEach(e => { lbData[toKey(e.name)] = e; });
+    renderLB();
   }
 } else {
   document.getElementById('fbNotice').classList.add('show');
-  useFallback();
-}
-
-function useFallback() {
-  // Local-only mode with seed data
-  SEED.forEach(e => { lbData[e.name.toLowerCase()] = e; });
+  SEED.forEach(e => { lbData[toKey(e.name)] = e; });
   renderLB();
 }
 
-function submitToLB(name, score, subject) {
-  const key = name.toLowerCase().replace(/[^a-z0-9_]/g,'_');
-  const entry = { name, score, subject };
-
-  if (db) {
-    // Only update if this score is higher
-    db.ref(`leaderboard/${key}`).transaction(current => {
-      if (!current || score > current.score) return entry;
-      return; // abort if not higher
-    });
-  } else {
-    // Fallback local
-    if (!lbData[key] || score > lbData[key].score) {
-      lbData[key] = entry;
-      renderLB();
-    }
-  }
-}
-
-// Modal
-document.getElementById('submitScore').addEventListener('click', () => {
-  const name = document.getElementById('nameInput').value.trim() || 'anonymous';
-  myName = name;
-  submitToLB(name, hiScore, 'aura.iq');
-  document.getElementById('modal').classList.remove('show');
-  document.getElementById('ovTitle').textContent = 'on the board';
-  document.getElementById('ovSub').textContent = `score: ${hiScore} · you're a scholar`;
-  document.getElementById('playBtn').textContent = '↺ run again';
-  document.getElementById('gameOverlay').classList.remove('hidden');
-  gameState = 'idle';
-});
-
-document.getElementById('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('submitScore').click(); });
-
-// Init
+// ── INIT ──
+updatePlayerUI();
 document.getElementById('hiScore').textContent = hiScore;
 drawIdle();
+
+// Show username modal on first visit, otherwise show game overlay
+if (!myName) {
+  showUsernameModal(false);
+} else {
+  showGameOverlay('idle');
+}
 </script>
 </body>
 </html>
